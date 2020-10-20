@@ -1,0 +1,1230 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={GSS Analysis Report},
+  pdfauthor={Qiyu Huang\& Yuhan Zhu},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+
+\title{GSS Analysis Report}
+\author{Qiyu Huang\& Yuhan Zhu}
+\date{10/19/2020}
+
+\begin{document}
+\maketitle
+
+\hypertarget{abstract}{%
+\subsection{Abstract}\label{abstract}}
+
+We are going to take a analysis on th Canadian General Social Survey. We
+have used logistic regression and linear regression to see
+relationships. Deetails are shown later in the discussion part.
+
+\hypertarget{introduction}{%
+\subsection{Introduction}\label{introduction}}
+
+We want to find if people are older, will they have more kids, more
+relationships, and have early kids when they are young? We also want to
+find if the income level is related with gender, with total number of
+children, and with satisfaction of their lives. Will the family be
+richer if they have more kids or poorer is what we want to find out as
+well. \#\# Data
+
+\begin{verbatim}
+## Installing package into '/home/rstudio-user/R/x86_64-pc-linux-gnu-library/4.0'
+## (as 'lib' is unspecified)
+## Installing package into '/home/rstudio-user/R/x86_64-pc-linux-gnu-library/4.0'
+## (as 'lib' is unspecified)
+## Installing package into '/home/rstudio-user/R/x86_64-pc-linux-gnu-library/4.0'
+## (as 'lib' is unspecified)
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in install.packages("readr", repos = "http://cran.us.r-project.org"):
+## installation of package 'readr' had non-zero exit status
+\end{verbatim}
+
+\begin{verbatim}
+## Installing package into '/home/rstudio-user/R/x86_64-pc-linux-gnu-library/4.0'
+## (as 'lib' is unspecified)
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'janitor'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:stats':
+## 
+##     chisq.test, fisher.test
+\end{verbatim}
+
+\begin{verbatim}
+## -- Attaching packages --------------------------------------- tidyverse 1.3.0 --
+\end{verbatim}
+
+\begin{verbatim}
+## v ggplot2 3.3.2     v purrr   0.3.4
+## v tibble  3.0.4     v dplyr   1.0.2
+## v tidyr   1.1.2     v stringr 1.4.0
+## v readr   1.4.0     v forcats 0.5.0
+\end{verbatim}
+
+\begin{verbatim}
+## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()
+\end{verbatim}
+
+\hypertarget{data-cleaning-part}{%
+\section{Data cleaning Part}\label{data-cleaning-part}}
+
+\hypertarget{importing-raw-data}{%
+\subsubsection{importing raw data}\label{importing-raw-data}}
+
+raw\_data \textless- read\_csv(``/cloud/project/AAGe4G0U.csv'') dict
+\textless- read\_lines(``gss\_dict.txt'', skip = 18) labels\_raw
+\textless- read\_file(``gss\_labels.txt'')
+
+\hypertarget{set-up-dictionary}{%
+\subsubsection{set up dictionary}\label{set-up-dictionary}}
+
+variable\_descriptions \textless- as\_tibble(dict) \%\textgreater\%
+filter(value!=``\}'') \%\textgreater\% mutate(value =
+str\_replace(value, ".+\%{[}0-9{]}.*f{[} {]}\{2,\}``,''``))
+\%\textgreater\% mutate(value = str\_remove\_all(value,''""))
+\%\textgreater\% rename(variable\_description = value) \%\textgreater\%
+bind\_cols(tibble(variable\_name = colnames(raw\_data){[}-1{]}))
+
+\hypertarget{variable-names-and-values}{%
+\subsubsection{variable names and
+values}\label{variable-names-and-values}}
+
+labels\_raw\_tibble \textless- as\_tibble(str\_split(labels\_raw,
+``;''){[}{[}1{]}{]}) \%\textgreater\% filter(row\_number()!=1)
+\%\textgreater\% mutate(value = str\_remove(value, ``\nlabel define''))
+\%\textgreater\% mutate(value = str\_replace(value, ``{[} {]}\{2,\}'',
+``XXX'')) \%\textgreater\% mutate(splits = str\_split(value, ``XXX''))
+\%\textgreater\% rowwise() \%\textgreater\% mutate(variable\_name =
+splits{[}1{]}, cases = splits{[}2{]}) \%\textgreater\% mutate(cases =
+str\_replace\_all(cases, ``\n [ ]{2,}'', "")) \%\textgreater\%
+select(variable\_name, cases) \%\textgreater\% drop\_na()
+
+\hypertarget{variable-name}{%
+\subsubsection{variable name}\label{variable-name}}
+
+labels\_raw\_tibble \textless- labels\_raw\_tibble \%\textgreater\%
+mutate(splits = str\_split(cases, ``{[} {]}\{0,\}"{[} {]}\{0,\}''))
+
+\hypertarget{creating-a-function}{%
+\subsubsection{creating a function}\label{creating-a-function}}
+
+add\_cw\_text \textless- function(x, y)\{ if(!is.na(as.numeric(x)))\{
+x\_new \textless- paste0(y, ``=='', x,``\textasciitilde{}'') \} else\{
+x\_new \textless- paste0(``"'',x,``",'') \} return(x\_new) \} \#\#\#
+Another function cw\_statements \textless- labels\_raw\_tibble
+\%\textgreater\% rowwise() \%\textgreater\%
+mutate(splits\_with\_cw\_text = list(modify(splits, add\_cw\_text, y =
+variable\_name))) \%\textgreater\% mutate(cw\_statement =
+paste(splits\_with\_cw\_text, collapse = "``)) \%\textgreater\%
+mutate(cw\_statement = paste0(''case\_when(``,
+cw\_statement,''TRUE\textasciitilde"NA")``)) \%\textgreater\%
+mutate(cw\_statement = str\_replace(cw\_statement,'',"",``,'',"))
+\%\textgreater\% select(variable\_name, cw\_statement)
+
+\hypertarget{do-some-final-cleans-of-this-function}{%
+\subsubsection{Do some final cleans of this
+function}\label{do-some-final-cleans-of-this-function}}
+
+cw\_statements \textless- cw\_statements \%\textgreater\%
+mutate(variable\_name = str\_remove\_all(variable\_name,
+``\textbackslash r'')) \%\textgreater\% mutate(cw\_statement =
+str\_remove\_all(cw\_statement, ``\textbackslash r''))
+
+\hypertarget{apply-that-dictionary-to-the-raw-data}{%
+\subsubsection{Apply that dictionary to the raw
+data}\label{apply-that-dictionary-to-the-raw-data}}
+
+gss \textless- raw\_data \%\textgreater\% select(CASEID, agedc,
+achd\_1c, achdmpl, totchdc, acu0c, agema1c, achb1c, rsh\_131a, arretwk,
+slm\_01, sex, brthcan, brthfcan, brthmcan, brthmacr, brthprvc, yrarri,
+prv, region, luc\_rst, marstat, amb\_01, vismin, alndimmg, bpr\_16,
+bpr\_19, ehg3\_01b, odr\_10, livarr12, dwelc, hsdsizec, brthpcan,
+brtpprvc, visminpr, rsh\_125a, eop\_200, uhw\_16gr, lmam\_01, acmpryr,
+srh\_110, srh\_115, religflg, rlr\_110, lanhome, lan\_01, famincg2,
+ttlincg2, noc1610, cc\_20\_1, cc\_30\_1, ccmoc1c, cor\_031, cor\_041,
+cu0rnkc, pr\_cl, chh0014c, nochricc, grndpa, gparliv, evermar, ma0\_220,
+nmarevrc, ree\_02, rsh\_131b, rto\_101, rto\_110, rto\_120, rtw\_300,
+sts\_410, csp\_105, csp\_110a, csp\_110b, csp\_110c, csp\_110d,
+csp\_160, fi\_110) \%\textgreater\% mutate\_at(vars(agedc:fi\_110),
+.funs = funs(ifelse(.\textgreater=96, NA, .))) \%\textgreater\%
+mutate\_at(.vars = vars(sex:fi\_110), .funs = funs(eval(parse(text =
+cw\_statements \%\textgreater\%
+filter(variable\_name==deparse(substitute(.))) \%\textgreater\%
+select(cw\_statement) \%\textgreater\% pull()))))
+
+\hypertarget{change-the-attributes-name}{%
+\subsubsection{Change the attributes
+name}\label{change-the-attributes-name}}
+
+gss \textless- gss \%\textgreater\% clean\_names() \%\textgreater\%
+rename(age = agedc, age\_first\_child = achd\_1c,
+age\_youngest\_child\_under\_6 = achdmpl, total\_children = totchdc,
+age\_start\_relationship = acu0c, age\_at\_first\_marriage = agema1c,
+age\_at\_first\_birth = achb1c, distance\_between\_houses = rsh\_131a,
+age\_youngest\_child\_returned\_work = arretwk, feelings\_life =
+slm\_01, sex = sex, place\_birth\_canada = brthcan, place\_birth\_father
+= brthfcan, place\_birth\_mother = brthmcan, place\_birth\_macro\_region
+= brthmacr, place\_birth\_province = brthprvc, year\_arrived\_canada =
+yrarri, province = prv, region = region, pop\_center = luc\_rst,
+marital\_status = marstat, aboriginal = amb\_01, vis\_minority = vismin,
+age\_immigration = alndimmg, landed\_immigrant = bpr\_16,
+citizenship\_status = bpr\_19, education = ehg3\_01b, own\_rent =
+odr\_10, living\_arrangement = livarr12, hh\_type = dwelc, hh\_size =
+hsdsizec, partner\_birth\_country = brthpcan, partner\_birth\_province =
+brtpprvc, partner\_vis\_minority = visminpr, partner\_sex = rsh\_125a,
+partner\_education = eop\_200, average\_hours\_worked = uhw\_16gr,
+worked\_last\_week = lmam\_01, partner\_main\_activity = acmpryr,
+self\_rated\_health = srh\_110, self\_rated\_mental\_health = srh\_115,
+religion\_has\_affiliation = religflg, regilion\_importance = rlr\_110,
+language\_home = lanhome, language\_knowledge = lan\_01, income\_family
+= famincg2, income\_respondent = ttlincg2, occupation = noc1610,
+childcare\_regular = cc\_20\_1, childcare\_type = cc\_30\_1,
+childcare\_monthly\_cost = ccmoc1c, ever\_fathered\_child = cor\_031,
+ever\_given\_birth = cor\_041, number\_of\_current\_union = cu0rnkc,
+lives\_with\_partner = pr\_cl, children\_in\_household = chh0014c,
+number\_total\_children\_intention = nochricc, has\_grandchildren =
+grndpa, grandparents\_still\_living = gparliv, ever\_married = evermar,
+current\_marriage\_is\_first = ma0\_220, number\_marriages = nmarevrc,
+religion\_participation = ree\_02, partner\_location\_residence =
+rsh\_131b, full\_part\_time\_work = rto\_101, time\_off\_work\_birth =
+rto\_110, reason\_no\_time\_off\_birth = rto\_120, returned\_same\_job =
+rtw\_300, satisfied\_time\_children = sts\_410,
+provide\_or\_receive\_fin\_supp = csp\_105, fin\_supp\_child\_supp =
+csp\_110a, fin\_supp\_child\_exp = csp\_110b, fin\_supp\_lump =
+csp\_110c, fin\_supp\_other = csp\_110d, fin\_supp\_agreement =
+csp\_160, future\_children\_intention = fi\_110)
+
+\hypertarget{clean-up}{%
+\subsubsection{Clean up}\label{clean-up}}
+
+gss \textless- gss \%\textgreater\%
+mutate\_at(vars(age:future\_children\_intention), .funs =
+funs(ifelse(.==``Valid skip''\textbar.==``Refusal''\textbar.==``Not
+stated'', ``NA'', .))) gss \textless- gss \%\textgreater\%
+mutate(is\_male = ifelse(sex==``Male'', 1, 0)) gss \textless- gss
+\%\textgreater\%
+mutate\_at(vars(fin\_supp\_child\_supp:fin\_supp\_other), .funs =
+funs(case\_when( .==``Yes''\textsubscript{1, .==``No''}0,
+.==``NA''\textasciitilde as.numeric(NA) ))) main\_act \textless-
+raw\_data \%\textgreater\% mutate(main\_activity = case\_when(
+mpl\_105a==``Yes''\textasciitilde{} ``Working at a paid job/business'',
+mpl\_105b==``Yes'' \textasciitilde{} ``Looking for paid work'',
+mpl\_105c==``Yes'' \textasciitilde{} ``Going to school'',
+mpl\_105d==``Yes'' \textasciitilde{} ``Caring for children'',
+mpl\_105e==``Yes'' \textasciitilde{} ``Household work'',
+mpl\_105i==``Yes'' \textasciitilde{} ``Other'', TRUE\textasciitilde{}
+``NA'')) \%\textgreater\% select(main\_activity) \%\textgreater\% pull()
+age\_diff \textless- raw\_data \%\textgreater\% select(marstat, aprcu0c,
+adfgrma0) \%\textgreater\% mutate\_at(.vars = vars(aprcu0c:adfgrma0),
+.funs = funs(eval(parse(text = cw\_statements \%\textgreater\%
+filter(variable\_name==deparse(substitute(.))) \%\textgreater\%
+select(cw\_statement) \%\textgreater\% pull())))) \%\textgreater\%
+mutate(age\_diff = ifelse(marstat==``Living common-law'', aprcu0c,
+adfgrma0)) \%\textgreater\% mutate\_at(vars(age\_diff), .funs =
+funs(ifelse(.==``Valid skip''\textbar.==``Refusal''\textbar.==``Not
+stated'', ``NA'', .))) \%\textgreater\% select(age\_diff)
+\%\textgreater\% pull() gss \textless- gss \%\textgreater\%
+mutate(main\_activity = main\_act, age\_diff = age\_diff) gss \textless-
+gss \%\textgreater\% rowwise() \%\textgreater\% mutate(hh\_size =
+str\_remove(string = hh\_size, pattern = ``\textbackslash{} .\emph{"))
+\%\textgreater\% mutate(hh\_size = case\_when( hh\_size=="One"
+\textasciitilde{} 1, hh\_size=="Two" \textasciitilde{} 2,
+hh\_size=="Three" \textasciitilde{} 3, hh\_size=="Four"
+\textasciitilde{} 4, hh\_size=="Five" \textasciitilde{} 5,
+hh\_size=="Six" \textasciitilde{} 6 )) gss \textless- gss
+\%\textgreater\% rowwise() \%\textgreater\% mutate(number\_marriages =
+str\_remove(string = number\_marriages, pattern = "\textbackslash{}
+.}'')) \%\textgreater\% mutate(number\_marriages = case\_when(
+number\_marriages==``No'' \textasciitilde{} 0,
+number\_marriages==``One'' \textasciitilde{} 1,
+number\_marriages==``Two'' \textasciitilde{} 2,
+number\_marriages==``Three'' \textasciitilde{} 3,
+number\_marriages==``Four'' \textasciitilde{} 4 )) gss \textless- gss
+\%\textgreater\% rowwise() \%\textgreater\%
+mutate(number\_total\_children\_known =
+ifelse(number\_total\_children\_intention==``Don't
+know''\textbar number\_total\_children\_intention==``NA'', 0, 1))
+\%\textgreater\% mutate(number\_total\_children\_intention =
+str\_remove(string = number\_total\_children\_intention, pattern =
+"\textbackslash{} .*``)) \%\textgreater\%
+mutate(number\_total\_children\_intention = case\_when(
+number\_total\_children\_intention==''None" \textasciitilde{} 0,
+number\_total\_children\_intention==``One'' \textasciitilde{} 1,
+number\_total\_children\_intention==``Two'' \textasciitilde{} 2,
+number\_total\_children\_intention==``Three'' \textasciitilde{} 3,
+number\_total\_children\_intention==``Four'' \textasciitilde{} 4,
+number\_total\_children\_intention==``Don't'' \textasciitilde{}
+as.numeric(NA) ))
+
+\hypertarget{save-to-a-new-csv-file-and-finish-cleaning}{%
+\subsubsection{save to a new csv file and finish
+cleaning}\label{save-to-a-new-csv-file-and-finish-cleaning}}
+
+write\_csv(gss, ``gss.csv'')
+
+\hypertarget{model}{%
+\subsection{Model}\label{model}}
+
+I have used ggplot, histogram, logistic regression, linear regression to
+analaysis these datasets.
+
+This is the mathmetical notation for linear regression :y = β0 + β1x +
+e, where β0 is the intercept, there could be β2,β3 and so on. Y must be
+numerical. Predictors can be both numerical and categorical. In this
+case, I have picked some numerical variables as predictors and age as Y.
+
+This is the mathmetical notation for logistic regression : log(p/(1-p))
+= β0 + β1x,where β0 is the intercept, there could be β2,β3 and so on. P
+is the probability of an event that is going to occur. β1 is a
+coefficient represents changes in log adds for every one unit increase
+in x. Y can either be 1 or 0.
+
+\hypertarget{results}{%
+\subsection{Results}\label{results}}
+
+\begin{verbatim}
+## 
+## -- Column specification --------------------------------------------------------
+## cols(
+##   .default = col_character(),
+##   caseid = col_double(),
+##   age = col_double(),
+##   age_first_child = col_double(),
+##   age_youngest_child_under_6 = col_double(),
+##   total_children = col_double(),
+##   age_start_relationship = col_double(),
+##   age_at_first_marriage = col_double(),
+##   age_at_first_birth = col_double(),
+##   distance_between_houses = col_double(),
+##   age_youngest_child_returned_work = col_double(),
+##   feelings_life = col_double(),
+##   hh_size = col_double(),
+##   number_total_children_intention = col_double(),
+##   number_marriages = col_double(),
+##   fin_supp_child_supp = col_double(),
+##   fin_supp_child_exp = col_double(),
+##   fin_supp_lump = col_double(),
+##   fin_supp_other = col_double(),
+##   is_male = col_double(),
+##   main_activity = col_logical()
+##   # ... with 1 more columns
+## )
+## i Use `spec()` for the full column specifications.
+\end{verbatim}
+
+\begin{verbatim}
+##      caseid           age        age_first_child age_youngest_child_under_6
+##  Min.   :    1   Min.   :15.00   Min.   : 0.00   Min.   :0.000             
+##  1st Qu.: 5151   1st Qu.:37.30   1st Qu.:15.00   1st Qu.:1.000             
+##  Median :10302   Median :54.20   Median :32.00   Median :2.000             
+##  Mean   :10302   Mean   :52.19   Mean   :30.57   Mean   :2.412             
+##  3rd Qu.:15452   3rd Qu.:66.78   3rd Qu.:44.00   3rd Qu.:4.000             
+##  Max.   :20602   Max.   :80.00   Max.   :60.00   Max.   :5.000             
+##                                  NA's   :6835    NA's   :18488             
+##  total_children  age_start_relationship age_at_first_marriage
+##  Min.   :0.000   Min.   :18.00          Min.   :15.0         
+##  1st Qu.:0.000   1st Qu.:25.00          1st Qu.:20.5         
+##  Median :2.000   Median :30.50          Median :22.8         
+##  Mean   :1.679   Mean   :33.63          Mean   :24.1         
+##  3rd Qu.:3.000   3rd Qu.:40.62          3rd Qu.:26.4         
+##  Max.   :7.000   Max.   :60.00          Max.   :50.0         
+##  NA's   :19      NA's   :18566          NA's   :15248        
+##  age_at_first_birth distance_between_houses age_youngest_child_returned_work
+##  Min.   :18.00      Min.   : 0.00           Min.   : 0.200                  
+##  1st Qu.:22.80      1st Qu.: 4.00           1st Qu.: 0.500                  
+##  Median :26.40      Median :10.00           Median : 6.000                  
+##  Mean   :26.86      Mean   :17.13           Mean   : 6.589                  
+##  3rd Qu.:30.30      3rd Qu.:24.75           3rd Qu.:12.000                  
+##  Max.   :45.00      Max.   :90.00           Max.   :48.000                  
+##  NA's   :7865       NA's   :19476           NA's   :19466                   
+##  feelings_life        sex            place_birth_canada place_birth_father
+##  Min.   : 0.000   Length:20602       Length:20602       Length:20602      
+##  1st Qu.: 7.000   Class :character   Class :character   Class :character  
+##  Median : 8.000   Mode  :character   Mode  :character   Mode  :character  
+##  Mean   : 8.094                                                           
+##  3rd Qu.: 9.000                                                           
+##  Max.   :10.000                                                           
+##  NA's   :271                                                              
+##  place_birth_mother place_birth_macro_region place_birth_province
+##  Length:20602       Length:20602             Length:20602        
+##  Class :character   Class :character         Class :character    
+##  Mode  :character   Mode  :character         Mode  :character    
+##                                                                  
+##                                                                  
+##                                                                  
+##                                                                  
+##  year_arrived_canada   province            region           pop_center       
+##  Length:20602        Length:20602       Length:20602       Length:20602      
+##  Class :character    Class :character   Class :character   Class :character  
+##  Mode  :character    Mode  :character   Mode  :character   Mode  :character  
+##                                                                              
+##                                                                              
+##                                                                              
+##                                                                              
+##  marital_status      aboriginal        vis_minority       age_immigration   
+##  Length:20602       Length:20602       Length:20602       Length:20602      
+##  Class :character   Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character   Mode  :character  
+##                                                                             
+##                                                                             
+##                                                                             
+##                                                                             
+##  landed_immigrant   citizenship_status  education           own_rent        
+##  Length:20602       Length:20602       Length:20602       Length:20602      
+##  Class :character   Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character   Mode  :character  
+##                                                                             
+##                                                                             
+##                                                                             
+##                                                                             
+##  living_arrangement   hh_type             hh_size      partner_birth_country
+##  Length:20602       Length:20602       Min.   :1.000   Length:20602         
+##  Class :character   Class :character   1st Qu.:1.000   Class :character     
+##  Mode  :character   Mode  :character   Median :2.000   Mode  :character     
+##                                        Mean   :2.347                        
+##                                        3rd Qu.:3.000                        
+##                                        Max.   :6.000                        
+##                                                                             
+##  partner_birth_province partner_vis_minority partner_sex       
+##  Length:20602           Length:20602         Length:20602      
+##  Class :character       Class :character     Class :character  
+##  Mode  :character       Mode  :character     Mode  :character  
+##                                                                
+##                                                                
+##                                                                
+##                                                                
+##  partner_education  average_hours_worked worked_last_week  
+##  Length:20602       Length:20602         Length:20602      
+##  Class :character   Class :character     Class :character  
+##  Mode  :character   Mode  :character     Mode  :character  
+##                                                            
+##                                                            
+##                                                            
+##                                                            
+##  partner_main_activity self_rated_health  self_rated_mental_health
+##  Length:20602          Length:20602       Length:20602            
+##  Class :character      Class :character   Class :character        
+##  Mode  :character      Mode  :character   Mode  :character        
+##                                                                   
+##                                                                   
+##                                                                   
+##                                                                   
+##  religion_has_affiliation regilion_importance language_home     
+##  Length:20602             Length:20602        Length:20602      
+##  Class :character         Class :character    Class :character  
+##  Mode  :character         Mode  :character    Mode  :character  
+##                                                                 
+##                                                                 
+##                                                                 
+##                                                                 
+##  language_knowledge income_family      income_respondent   occupation       
+##  Length:20602       Length:20602       Length:20602       Length:20602      
+##  Class :character   Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character   Mode  :character  
+##                                                                             
+##                                                                             
+##                                                                             
+##                                                                             
+##  childcare_regular  childcare_type     childcare_monthly_cost
+##  Length:20602       Length:20602       Length:20602          
+##  Class :character   Class :character   Class :character      
+##  Mode  :character   Mode  :character   Mode  :character      
+##                                                              
+##                                                              
+##                                                              
+##                                                              
+##  ever_fathered_child ever_given_birth   number_of_current_union
+##  Length:20602        Length:20602       Length:20602           
+##  Class :character    Class :character   Class :character       
+##  Mode  :character    Mode  :character   Mode  :character       
+##                                                                
+##                                                                
+##                                                                
+##                                                                
+##  lives_with_partner children_in_household number_total_children_intention
+##  Length:20602       Length:20602          Min.   :0.000                  
+##  Class :character   Class :character      1st Qu.:0.000                  
+##  Mode  :character   Mode  :character      Median :0.000                  
+##                                           Mean   :0.903                  
+##                                           3rd Qu.:2.000                  
+##                                           Max.   :4.000                  
+##                                           NA's   :12202                  
+##  has_grandchildren  grandparents_still_living ever_married      
+##  Length:20602       Length:20602              Length:20602      
+##  Class :character   Class :character          Class :character  
+##  Mode  :character   Mode  :character          Mode  :character  
+##                                                                 
+##                                                                 
+##                                                                 
+##                                                                 
+##  current_marriage_is_first number_marriages religion_participation
+##  Length:20602              Min.   :0.0000   Length:20602          
+##  Class :character          1st Qu.:0.0000   Class :character      
+##  Mode  :character          Median :1.0000   Mode  :character      
+##                            Mean   :0.7989                         
+##                            3rd Qu.:1.0000                         
+##                            Max.   :4.0000                         
+##                                                                   
+##  partner_location_residence full_part_time_work time_off_work_birth
+##  Length:20602               Length:20602        Length:20602       
+##  Class :character           Class :character    Class :character   
+##  Mode  :character           Mode  :character    Mode  :character   
+##                                                                    
+##                                                                    
+##                                                                    
+##                                                                    
+##  reason_no_time_off_birth returned_same_job  satisfied_time_children
+##  Length:20602             Length:20602       Length:20602           
+##  Class :character         Class :character   Class :character       
+##  Mode  :character         Mode  :character   Mode  :character       
+##                                                                     
+##                                                                     
+##                                                                     
+##                                                                     
+##  provide_or_receive_fin_supp fin_supp_child_supp fin_supp_child_exp
+##  Length:20602                Min.   :0.000       Min.   :0.000     
+##  Class :character            1st Qu.:1.000       1st Qu.:0.000     
+##  Mode  :character            Median :1.000       Median :0.000     
+##                              Mean   :0.765       Mean   :0.339     
+##                              3rd Qu.:1.000       3rd Qu.:1.000     
+##                              Max.   :1.000       Max.   :1.000     
+##                              NA's   :20057       NA's   :20057     
+##  fin_supp_lump   fin_supp_other  fin_supp_agreement future_children_intention
+##  Min.   :0.000   Min.   :0.000   Length:20602       Length:20602             
+##  1st Qu.:0.000   1st Qu.:0.000   Class :character   Class :character         
+##  Median :0.000   Median :0.000   Mode  :character   Mode  :character         
+##  Mean   :0.055   Mean   :0.055                                               
+##  3rd Qu.:0.000   3rd Qu.:0.000                                               
+##  Max.   :1.000   Max.   :1.000                                               
+##  NA's   :20057   NA's   :20057                                               
+##     is_male       main_activity    age_diff         number_total_children_known
+##  Min.   :0.0000   Mode:logical   Length:20602       Min.   :0.0000             
+##  1st Qu.:0.0000   NA's:20602     Class :character   1st Qu.:0.0000             
+##  Median :0.0000                  Mode  :character   Median :0.0000             
+##  Mean   :0.4562                                     Mean   :0.4123             
+##  3rd Qu.:1.0000                                     3rd Qu.:1.0000             
+##  Max.   :1.0000                                     Max.   :1.0000             
+## 
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: Removed 7865 rows containing missing values (geom_point).
+\end{verbatim}
+
+\includegraphics{GSS-CODE_files/figure-latex/unnamed-chunk-3-1.pdf}
+
+\begin{verbatim}
+## Warning: Removed 6835 rows containing missing values (geom_point).
+\end{verbatim}
+
+\includegraphics{GSS-CODE_files/figure-latex/unnamed-chunk-4-1.pdf}
+
+\begin{verbatim}
+## Warning: Removed 19 rows containing missing values (geom_point).
+\end{verbatim}
+
+\includegraphics{GSS-CODE_files/figure-latex/unnamed-chunk-5-1.pdf}
+
+\begin{verbatim}
+## Warning: Removed 20272 rows containing missing values (geom_point).
+\end{verbatim}
+
+\includegraphics{GSS-CODE_files/figure-latex/unnamed-chunk-6-1.pdf}
+
+\hypertarget{linear-regression}{%
+\subsection{linear regression}\label{linear-regression}}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = age ~ total_children + age_first_child + age_at_first_birth + 
+##     age_at_first_marriage + age_start_relationship, data = gss)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -3.7577 -0.3441 -0.0071  0.2994 13.8028 
+## 
+## Coefficients:
+##                         Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)            -0.541116   0.470578  -1.150   0.2510    
+## total_children         -0.010812   0.040020  -0.270   0.7872    
+## age_first_child         0.985121   0.005762 170.956   <2e-16 ***
+## age_at_first_birth      1.018111   0.013588  74.930   <2e-16 ***
+## age_at_first_marriage  -0.005123   0.012937  -0.396   0.6924    
+## age_start_relationship  0.015489   0.006343   2.442   0.0151 *  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.9223 on 324 degrees of freedom
+##   (20272 observations deleted due to missingness)
+## Multiple R-squared:  0.9925, Adjusted R-squared:  0.9924 
+## F-statistic:  8565 on 5 and 324 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = age ~ total_children + income_family, data = gss)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -55.970 -12.472   1.057  12.067  41.785 
+## 
+## Coefficients:
+##                                 Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)                     39.75129    0.35396 112.304  < 2e-16 ***
+## total_children                   5.30882    0.07226  73.473  < 2e-16 ***
+## income_family$125,000 and more  -1.53603    0.40167  -3.824 0.000132 ***
+## income_family$25,000 to $49,999  8.06564    0.40688  19.823  < 2e-16 ***
+## income_family$50,000 to $74,999  5.46642    0.41852  13.061  < 2e-16 ***
+## income_family$75,000 to $99,999  1.89703    0.43850   4.326 1.52e-05 ***
+## income_familyLess than $25,000   6.86210    0.44340  15.476  < 2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 15.44 on 20576 degrees of freedom
+##   (19 observations deleted due to missingness)
+## Multiple R-squared:  0.2438, Adjusted R-squared:  0.2436 
+## F-statistic:  1106 on 6 and 20576 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\hypertarget{logistic-regression}{%
+\subsection{Logistic Regression}\label{logistic-regression}}
+
+\begin{verbatim}
+## # A tibble: 6 x 81
+##   caseid   age age_first_child age_youngest_ch~ total_children age_start_relat~
+##    <dbl> <dbl>           <dbl>            <dbl>          <dbl>            <dbl>
+## 1      1  52.7              27               NA              1             NA  
+## 2      2  51.1              33               NA              5             NA  
+## 3      3  63.6              40               NA              5             NA  
+## 4      4  80                56               NA              1             NA  
+## 5      5  28                NA               NA              0             25.3
+## 6      6  63                37               NA              2             NA  
+## # ... with 75 more variables: age_at_first_marriage <dbl>,
+## #   age_at_first_birth <dbl>, distance_between_houses <dbl>,
+## #   age_youngest_child_returned_work <dbl>, feelings_life <dbl>, sex <chr>,
+## #   place_birth_canada <chr>, place_birth_father <chr>,
+## #   place_birth_mother <chr>, place_birth_macro_region <chr>,
+## #   place_birth_province <chr>, year_arrived_canada <chr>, province <chr>,
+## #   region <chr>, pop_center <chr>, marital_status <chr>, aboriginal <chr>,
+## #   vis_minority <chr>, age_immigration <chr>, landed_immigrant <chr>,
+## #   citizenship_status <chr>, education <chr>, own_rent <chr>,
+## #   living_arrangement <chr>, hh_type <chr>, hh_size <dbl>,
+## #   partner_birth_country <chr>, partner_birth_province <chr>,
+## #   partner_vis_minority <chr>, partner_sex <chr>, partner_education <chr>,
+## #   average_hours_worked <chr>, worked_last_week <chr>,
+## #   partner_main_activity <chr>, self_rated_health <chr>,
+## #   self_rated_mental_health <chr>, religion_has_affiliation <chr>,
+## #   regilion_importance <chr>, language_home <chr>, language_knowledge <chr>,
+## #   income_family <chr>, income_respondent <chr>, occupation <chr>,
+## #   childcare_regular <chr>, childcare_type <chr>,
+## #   childcare_monthly_cost <chr>, ever_fathered_child <chr>,
+## #   ever_given_birth <chr>, number_of_current_union <chr>,
+## #   lives_with_partner <chr>, children_in_household <chr>,
+## #   number_total_children_intention <dbl>, has_grandchildren <chr>,
+## #   grandparents_still_living <chr>, ever_married <chr>,
+## #   current_marriage_is_first <chr>, number_marriages <dbl>,
+## #   religion_participation <chr>, partner_location_residence <chr>,
+## #   full_part_time_work <chr>, time_off_work_birth <chr>,
+## #   reason_no_time_off_birth <chr>, returned_same_job <chr>,
+## #   satisfied_time_children <chr>, provide_or_receive_fin_supp <chr>,
+## #   fin_supp_child_supp <dbl>, fin_supp_child_exp <dbl>, fin_supp_lump <dbl>,
+## #   fin_supp_other <dbl>, fin_supp_agreement <chr>,
+## #   future_children_intention <chr>, is_male <dbl>, main_activity <lgl>,
+## #   age_diff <chr>, number_total_children_known <dbl>
+\end{verbatim}
+
+\begin{verbatim}
+## # A tibble: 6 x 82
+##   caseid   age age_first_child age_youngest_ch~ total_children age_start_relat~
+##    <dbl> <dbl>           <dbl>            <dbl>          <dbl>            <dbl>
+## 1      1  52.7              27               NA              1             NA  
+## 2      2  51.1              33               NA              5             NA  
+## 3      3  63.6              40               NA              5             NA  
+## 4      4  80                56               NA              1             NA  
+## 5      5  28                NA               NA              0             25.3
+## 6      6  63                37               NA              2             NA  
+## # ... with 76 more variables: age_at_first_marriage <dbl>,
+## #   age_at_first_birth <dbl>, distance_between_houses <dbl>,
+## #   age_youngest_child_returned_work <dbl>, feelings_life <dbl>, sex <chr>,
+## #   place_birth_canada <chr>, place_birth_father <chr>,
+## #   place_birth_mother <chr>, place_birth_macro_region <chr>,
+## #   place_birth_province <chr>, year_arrived_canada <chr>, province <chr>,
+## #   region <chr>, pop_center <chr>, marital_status <chr>, aboriginal <chr>,
+## #   vis_minority <chr>, age_immigration <chr>, landed_immigrant <chr>,
+## #   citizenship_status <chr>, education <chr>, own_rent <chr>,
+## #   living_arrangement <chr>, hh_type <chr>, hh_size <dbl>,
+## #   partner_birth_country <chr>, partner_birth_province <chr>,
+## #   partner_vis_minority <chr>, partner_sex <chr>, partner_education <chr>,
+## #   average_hours_worked <chr>, worked_last_week <chr>,
+## #   partner_main_activity <chr>, self_rated_health <chr>,
+## #   self_rated_mental_health <chr>, religion_has_affiliation <chr>,
+## #   regilion_importance <chr>, language_home <chr>, language_knowledge <chr>,
+## #   income_family <chr>, income_respondent <chr>, occupation <chr>,
+## #   childcare_regular <chr>, childcare_type <chr>,
+## #   childcare_monthly_cost <chr>, ever_fathered_child <chr>,
+## #   ever_given_birth <chr>, number_of_current_union <chr>,
+## #   lives_with_partner <chr>, children_in_household <chr>,
+## #   number_total_children_intention <dbl>, has_grandchildren <chr>,
+## #   grandparents_still_living <chr>, ever_married <chr>,
+## #   current_marriage_is_first <chr>, number_marriages <dbl>,
+## #   religion_participation <chr>, partner_location_residence <chr>,
+## #   full_part_time_work <chr>, time_off_work_birth <chr>,
+## #   reason_no_time_off_birth <chr>, returned_same_job <chr>,
+## #   satisfied_time_children <chr>, provide_or_receive_fin_supp <chr>,
+## #   fin_supp_child_supp <dbl>, fin_supp_child_exp <dbl>, fin_supp_lump <dbl>,
+## #   fin_supp_other <dbl>, fin_supp_agreement <chr>,
+## #   future_children_intention <chr>, is_male <dbl>, main_activity <lgl>,
+## #   age_diff <chr>, number_total_children_known <dbl>, income_status <chr>
+\end{verbatim}
+
+\begin{verbatim}
+## 
+##    1    2    3    4    5    6 
+## 2775 4345 3696 2921 2158 4707
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+
+## Warning in apply(gss, 2, as.numeric): NAs introduced by coercion
+\end{verbatim}
+
+\begin{verbatim}
+##   caseid  age age_first_child age_youngest_child_under_6 total_children
+## 1      1 52.7              27                         NA              1
+## 2      2 51.1              33                         NA              5
+## 3      3 63.6              40                         NA              5
+## 4      4 80.0              56                         NA              1
+## 5      5 28.0              NA                         NA              0
+## 6      6 63.0              37                         NA              2
+##   age_start_relationship age_at_first_marriage age_at_first_birth
+## 1                     NA                    NA               25.9
+## 2                     NA                    NA                 NA
+## 3                     NA                    NA               23.2
+## 4                     NA                    NA               27.3
+## 5                   25.3                    NA                 NA
+## 6                     NA                    NA               25.8
+##   distance_between_houses age_youngest_child_returned_work feelings_life sex
+## 1                      30                               NA             8   1
+## 2                      NA                               NA            10   0
+## 3                      NA                               NA             8   1
+## 4                      NA                               NA            10   1
+## 5                      NA                               NA             8   0
+## 6                      NA                               NA             9   1
+##   place_birth_canada place_birth_father place_birth_mother
+## 1                 NA                 NA                 NA
+## 2                 NA                 NA                 NA
+## 3                 NA                 NA                 NA
+## 4                 NA                 NA                 NA
+## 5                 NA                 NA                 NA
+## 6                 NA                 NA                 NA
+##   place_birth_macro_region place_birth_province year_arrived_canada province
+## 1                       NA                   NA                  NA       NA
+## 2                       NA                   NA                  NA       NA
+## 3                       NA                   NA                  NA       NA
+## 4                       NA                   NA                  NA       NA
+## 5                       NA                   NA                  NA       NA
+## 6                       NA                   NA                  NA       NA
+##   region pop_center marital_status aboriginal vis_minority age_immigration
+## 1     NA         NA             NA         NA           NA              NA
+## 2     NA         NA             NA         NA           NA              NA
+## 3     NA         NA             NA         NA           NA              NA
+## 4     NA         NA             NA         NA           NA              NA
+## 5     NA         NA             NA         NA           NA              NA
+## 6     NA         NA             NA         NA           NA              NA
+##   landed_immigrant citizenship_status education own_rent living_arrangement
+## 1               NA                 NA        NA       NA                 NA
+## 2               NA                 NA        NA       NA                 NA
+## 3               NA                 NA        NA       NA                 NA
+## 4               NA                 NA        NA       NA                 NA
+## 5               NA                 NA        NA       NA                 NA
+## 6               NA                 NA        NA       NA                 NA
+##   hh_type hh_size partner_birth_country partner_birth_province
+## 1      NA       1                    NA                     NA
+## 2      NA       2                    NA                     NA
+## 3      NA       2                    NA                     NA
+## 4      NA       2                    NA                     NA
+## 5      NA       2                    NA                     NA
+## 6      NA       2                    NA                     NA
+##   partner_vis_minority partner_sex partner_education average_hours_worked
+## 1                   NA          NA                NA                   NA
+## 2                   NA          NA                NA                   NA
+## 3                   NA          NA                NA                   NA
+## 4                   NA          NA                NA                   NA
+## 5                   NA          NA                NA                   NA
+## 6                   NA          NA                NA                   NA
+##   worked_last_week partner_main_activity self_rated_health
+## 1               NA                    NA                NA
+## 2               NA                    NA                NA
+## 3               NA                    NA                NA
+## 4               NA                    NA                NA
+## 5               NA                    NA                NA
+## 6               NA                    NA                NA
+##   self_rated_mental_health religion_has_affiliation regilion_importance
+## 1                       NA                       NA                  NA
+## 2                       NA                       NA                  NA
+## 3                       NA                       NA                  NA
+## 4                       NA                       NA                  NA
+## 5                       NA                       NA                  NA
+## 6                       NA                       NA                  NA
+##   language_home language_knowledge income_family income_respondent occupation
+## 1            NA                 NA            NA                NA         NA
+## 2            NA                 NA            NA                NA         NA
+## 3            NA                 NA            NA                NA         NA
+## 4            NA                 NA            NA                NA         NA
+## 5            NA                 NA            NA                NA         NA
+## 6            NA                 NA            NA                NA         NA
+##   childcare_regular childcare_type childcare_monthly_cost ever_fathered_child
+## 1                NA             NA                     NA                  NA
+## 2                NA             NA                     NA                  NA
+## 3                NA             NA                     NA                  NA
+## 4                NA             NA                     NA                  NA
+## 5                NA             NA                     NA                  NA
+## 6                NA             NA                     NA                  NA
+##   ever_given_birth number_of_current_union lives_with_partner
+## 1               NA                      NA                 NA
+## 2               NA                      NA                 NA
+## 3               NA                      NA                 NA
+## 4               NA                      NA                 NA
+## 5               NA                      NA                 NA
+## 6               NA                      NA                 NA
+##   children_in_household number_total_children_intention has_grandchildren
+## 1                    NA                              NA                NA
+## 2                    NA                              NA                NA
+## 3                    NA                              NA                NA
+## 4                    NA                              NA                NA
+## 5                    NA                               2                NA
+## 6                    NA                              NA                NA
+##   grandparents_still_living ever_married current_marriage_is_first
+## 1                        NA           NA                        NA
+## 2                        NA           NA                        NA
+## 3                        NA           NA                        NA
+## 4                        NA           NA                        NA
+## 5                        NA           NA                        NA
+## 6                        NA           NA                        NA
+##   number_marriages religion_participation partner_location_residence
+## 1                0                     NA                         NA
+## 2                1                     NA                         NA
+## 3                1                     NA                         NA
+## 4                1                     NA                         NA
+## 5                0                     NA                         NA
+## 6                1                     NA                         NA
+##   full_part_time_work time_off_work_birth reason_no_time_off_birth
+## 1                  NA                  NA                       NA
+## 2                  NA                  NA                       NA
+## 3                  NA                  NA                       NA
+## 4                  NA                  NA                       NA
+## 5                  NA                  NA                       NA
+## 6                  NA                  NA                       NA
+##   returned_same_job satisfied_time_children provide_or_receive_fin_supp
+## 1                NA                      NA                          NA
+## 2                NA                      NA                          NA
+## 3                NA                      NA                          NA
+## 4                NA                      NA                          NA
+## 5                NA                      NA                          NA
+## 6                NA                      NA                          NA
+##   fin_supp_child_supp fin_supp_child_exp fin_supp_lump fin_supp_other
+## 1                  NA                 NA            NA             NA
+## 2                  NA                 NA            NA             NA
+## 3                  NA                 NA            NA             NA
+## 4                  NA                 NA            NA             NA
+## 5                  NA                 NA            NA             NA
+## 6                  NA                 NA            NA             NA
+##   fin_supp_agreement future_children_intention is_male main_activity age_diff
+## 1                 NA                        NA       0            NA       NA
+## 2                 NA                        NA       1            NA       NA
+## 3                 NA                        NA       0            NA       NA
+## 4                 NA                        NA       0            NA       NA
+## 5                 NA                        NA       1            NA       NA
+## 6                 NA                        NA       0            NA       NA
+##   number_total_children_known income_status
+## 1                           0             2
+## 2                           0             4
+## 3                           0             4
+## 4                           0             5
+## 5                           1             3
+## 6                           0             3
+\end{verbatim}
+
+\includegraphics{GSS-CODE_files/figure-latex/unnamed-chunk-13-1.pdf}
+\includegraphics{GSS-CODE_files/figure-latex/unnamed-chunk-14-1.pdf}
+\#\# Standard Logistic Regression
+
+\begin{verbatim}
+## 
+## Call:
+## glm(formula = sex ~ age + age_first_child + total_children + 
+##     feelings_life + as.factor(income_status), family = "binomial", 
+##     data = gss_numeric)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -2.4244  -1.1885   0.7674   1.0340   1.9379  
+## 
+## Coefficients:
+##                            Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)                3.786023   0.170562  22.197  < 2e-16 ***
+## age                       -0.097040   0.003906 -24.841  < 2e-16 ***
+## age_first_child            0.090983   0.003602  25.260  < 2e-16 ***
+## total_children            -0.189921   0.017017 -11.161  < 2e-16 ***
+## feelings_life              0.025987   0.011501   2.260   0.0238 *  
+## as.factor(income_status)2 -0.293959   0.070921  -4.145 3.40e-05 ***
+## as.factor(income_status)3 -0.582232   0.072268  -8.057 7.85e-16 ***
+## as.factor(income_status)4 -0.632205   0.075822  -8.338  < 2e-16 ***
+## as.factor(income_status)5 -0.733849   0.080806  -9.082  < 2e-16 ***
+## as.factor(income_status)6 -0.633354   0.071529  -8.855  < 2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 18560  on 13584  degrees of freedom
+## Residual deviance: 17585  on 13575  degrees of freedom
+##   (7017 observations deleted due to missingness)
+## AIC: 17605
+## 
+## Number of Fisher Scoring iterations: 4
+\end{verbatim}
+
+\hypertarget{survey-estimation-for-logistic-regression}{%
+\subsection{Survey Estimation for Logistic
+Regression}\label{survey-estimation-for-logistic-regression}}
+
+install.packages(``survey'') library(survey)
+
+\hypertarget{using-the-survey-library}{%
+\subsection{Using the Survey Library}\label{using-the-survey-library}}
+
+\begin{verbatim}
+## Installing package into '/home/rstudio-user/R/x86_64-pc-linux-gnu-library/4.0'
+## (as 'lib' is unspecified)
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: grid
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: Matrix
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'Matrix'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:tidyr':
+## 
+##     expand, pack, unpack
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: survival
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'survey'
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:graphics':
+## 
+##     dotchart
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Call:
+## svyglm(formula = sex ~ age + age_first_child + total_children + 
+##     feelings_life + as.factor(income_status), design = a, family = "binomial")
+## 
+## Survey design:
+## svydesign(id = ~1, data = gss_numeric, fpc = b)
+## 
+## Coefficients:
+##                            Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)                3.786023   0.140641  26.920  < 2e-16 ***
+## age                       -0.097040   0.003257 -29.794  < 2e-16 ***
+## age_first_child            0.090983   0.002992  30.410  < 2e-16 ***
+## total_children            -0.189921   0.013716 -13.847  < 2e-16 ***
+## feelings_life              0.025987   0.009315   2.790  0.00528 ** 
+## as.factor(income_status)2 -0.293959   0.056767  -5.178 2.27e-07 ***
+## as.factor(income_status)3 -0.582232   0.058178 -10.008  < 2e-16 ***
+## as.factor(income_status)4 -0.632205   0.061268 -10.319  < 2e-16 ***
+## as.factor(income_status)5 -0.733849   0.065778 -11.157  < 2e-16 ***
+## as.factor(income_status)6 -0.633354   0.058028 -10.915  < 2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1.002454)
+## 
+## Number of Fisher Scoring iterations: 4
+\end{verbatim}
+
+\hypertarget{discussion}{%
+\subsection{Discussion}\label{discussion}}
+
+By using summary, we can see the details of each variable.
+
+Then we created several ggplots to determine relationships between
+factors.
+
+There is a positive linear relationship between age\_first\_child and
+age.
+
+There is a postive linear relationship between age and total\_children,
+age\_first\_children, age\_at\_first\_birth, age\_at\_first\_marriage
+and age\_start\_relationship.
+
+Then we run linear regression since we foud some relationship.
+
+The function will be Y = (-0.54 + -0.01* total\_children + 0.99*
+age\_first\_child +1.02* age\_at\_first\_birth-0.01*
+age\_at\_first\_marriage+0.02*age\_start\_relationship)
+
+Since there are many missing values that has been removed, about 20272
+rows. So we recreated a linear regression, this time, I added
+categorical variables income\_family to test if age and income are
+related.
+
+The function will be Y = 39.75 + 5.31* total\_children - 1.54* `125,000
+and more' + 8.07* `25,000 to \$49,999' + 5.47\emph{`50,000 to \$74,999'
++ 1.90} `75,000 to \$99,999' + 6.86*`Less than \$25,000'
+
+In order to generate logistic regression. We created a binary variable
+as our Y value which is sex. We set female = 1 and male = 0.
+
+Then we sepertaed the income\_family by 1,2,3,4,5,6 levels. `1' is the
+poorest family and `6' is richest family as the rank.
+
+Since logistic regression Y is a binary.Current Y value is a character.
+So we changed GSS file to numerical and named it gss\_numeric.
+
+We created a histogram to show the income status from 1 through 6.
+According to the histogram, there are many income\_family that have
+income over \$125,000 and between \$25,000 to \$49,000.
+
+We also created a histogram of female and male. According to the
+histogram, there are more females than males in the dataset.
+
+The logistic regression function we got is Y = 3.79-0.097* age+0.091*
+age\_first\_child-0.19*
+total\_children+0.026*feelings\_life-0.294x2-0.58x3-0.63x4-0.73x5-0.63x6
+There is about 1000 difference between null deviance and residual
+deviance, the larger the difference is, the better the model is.
+
+\hypertarget{weaknesses}{%
+\subsection{Weaknesses}\label{weaknesses}}
+
+There are many missing values even after data cleaning. If by removing
+all the NAs,there will be 0 rows left. So in order to run some analysis,
+we have to obtain some missing values. But due to this is a
+questionaire, it's hard to obtain perfect answers. There are too many
+columns, factors in the dataset, which can create mislead when doing
+analysis.
+
+\hypertarget{next-steps}{%
+\subsection{Next Steps}\label{next-steps}}
+
+Since we have produced predictive model, which is the logistic
+regression. We can try to predict some values. We also would like to
+create other algorithms such as random forest, or decision tree. Because
+there are too many factors in the dataset random forest and decision
+tree can deal with large dataset with multidimensions. we think GSS
+dataset is multidimensional.And of course, we should also set up a
+following survey to fill up these missing values by doing our best.
+Obtaining good dataset can lead to a better result.
+
+\hypertarget{references}{%
+\subsection{References}\label{references}}
+
+Technology, A. (n.d.). Data Centre. Retrieved October 20, 2020, from
+\url{http://dc.chass.utoronto.ca/myaccess.html} Tyagi, P. (2018,
+December 25). Decision Tree. Retrieved from
+\url{https://medium.com/@pytyagi/decision-tree-ac0c9e3b8258}
+
+\end{document}
